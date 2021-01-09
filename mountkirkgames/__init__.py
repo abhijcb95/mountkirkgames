@@ -1,14 +1,12 @@
 
 from flask import Flask, render_template, send_from_directory
-import requests
-import json
+import os
 
 app = Flask(__name__)
 
 @app.route("/")
 def default():
-    response = requests.get("https://ipgeolocation.abstractapi.com/v1/?api_key=7cd29c75593445baa0ae7068c297c1bc")
-    response = json.loads(response.content.decode("utf-8"))
+    os.system('python /var/www/mountkirkgames/mountkirkgames/db.py')
     return render_template("index.html")
     
 @app.route("/static/<path:path>")
