@@ -25,5 +25,5 @@ elif hour > 24:
 time = str(hour) + response['timezone']['current_time'][2:]
 
 
-doc_ref = db.collection(u'users').document(response['country_code'] + " @GMT " + time)
+doc_ref = db.collection(u'users').document(response['country_code'] + " @ " + time + " GMT")
 doc_ref.set(response)
