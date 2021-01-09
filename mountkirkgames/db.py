@@ -16,7 +16,14 @@ response = requests.get("https://ipgeolocation.abstractapi.com/v1/?api_key=7cd29
 response = json.loads(response.content.decode("utf-8"))
 
 hour = int(response['timezone']['current_time'][0:2]) - response['timezone']['gmt_offset']
+
+if hour < 0:
+  hour = 24 + hour
+elif hour > 24:
+  hour = 0 + hour - 24
+
 time = str(hour) + response['timezone']['current_time'][2:]
 
-doc_ref = db.collection(u'users').document(response['country_code'] + " " + time)
+
+doc_ref = db.collection(u'users').document(response['country_code'] + " @GMT " + time)
 doc_ref.set(response)
