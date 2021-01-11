@@ -3,6 +3,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from google.cloud import pubsub_v1
+from google.cloud import storage
 from datetime import datetime
 
 dt = datetime.utcnow().strftime("%Y-%m-%d, %H:%M:%S")
@@ -37,14 +38,11 @@ message = {
 future = publisher.publish(topic_path, json.dumps(message).encode("utf-8"))
 
 #inserting data into GCS
-
-file = open("from_vm.txt", "w+")
-file.write(response["city"] + "," + response["ip_address"] + "," + time + "," + "reset password (test from backend)")
-file.close()
+from_vm = response["city"] + "," + response["ip_address"] + "," + time + "," + "reset password (test from backend)"
 
 storage_client = storage.Client()
 bucket_name = "gcs-to-bq"
 bucket = storage_client.bucket(bucket_name)
 destination_blob_name = "from_vm.txt"
 blob = bucket.blob(destination_blob_name)
-blob.upload_from_filename("from_vm.txt")
+blob.upload_from_string(from_vm)
