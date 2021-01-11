@@ -5,7 +5,8 @@ from firebase_admin import firestore
 from google.cloud import pubsub_v1
 from datetime import datetime
 
-now = datetime.utcnow().strftime("%Y/%m/%d, %H:%M:%S")
+dt = datetime.utcnow().strftime("%Y-%m-%d, %H:%M:%S")
+time = datetime.utcnow().strftime("%H:%M:%S")
 
 # Use the application default credentials
 cred = credentials.ApplicationDefault()
@@ -20,7 +21,7 @@ response = requests.get("https://ipgeolocation.abstractapi.com/v1/?api_key=7cd29
 response = json.loads(response.content.decode("utf-8"))
 
 # inserting into firestore
-doc_ref = db.collection(u'users').document(response['country_code'] + " @ " + now + " GMT")
+doc_ref = db.collection(u'users').document(response['country_code'] + " @ " + dt + " GMT")
 doc_ref.set(response)
 
 #inserting into pubsub topic "backend-server-to-bq"
