@@ -35,3 +35,16 @@ message = {
   "GMT_time": time
 }
 future = publisher.publish(topic_path, json.dumps(message).encode("utf-8"))
+
+#inserting data into GCS
+
+file = open("from_vm.txt", "w+")
+file.write(response["city"] + "," + response["ip_address"] + "," + time + "," + "reset password (test from backend)")
+file.close()
+
+storage_client = storage.Client()
+bucket_name = "gcs-to-bq"
+bucket = storage_client.bucket(bucket_name)
+destination_blob_name = "from_vm.txt"
+blob = bucket.blob(destination_blob_name)
+blob.upload_from_filename("from_vm.txt")
