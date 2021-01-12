@@ -18,7 +18,7 @@ MOUNTKIRK GAMES Implementation
 ## Code to run batch job: gcloud dataflow jobs run us-gcs-to-bq --gcs-location gs://dataflow-templates-us-central1/latest/GCS_Text_to_BigQuery --region us-central1 --max-workers 3 --num-workers 1 --worker-machine-type n1-standard-1 --staging-location gs://gcs-to-bq/temp --subnetwork https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/us-central1/subnetworks/us-subnet-data-analytics --network vpc-global --disable-public-ips --parameters javascriptTextTransformGcsPath=gs://gcs-to-bq/dataflow_scripts/transform.js,JSONPath=gs://gcs-to-bq/dataflow_scripts/bq-schema.json,javascriptTextTransformFunctionName=transform,outputTable=g-grp4-implementation:gcs_to_bq.user_files,inputFilePattern=gs://gcs-to-bq/*.txt,bigQueryLoadingTemporaryDirectory=gs://gcs-to-bq/temp
 ## remember to run 'python delete_deployment.py' after seeing results to prevent incurring unnecessary costs.
 
------ QUICK DEPLOYMENT: (for use in 'g-grp4-implementation'; PRE-REQUISITES COMPLETED)
+----- QUICK DEPLOYMENT: (for use in g-group-4 project; PRE-REQUISITES COMPLETED)
 git clone https://github.com/abhijcb95/mountkirkgames.git
 cd mountkirkgames
 python deployment.py
