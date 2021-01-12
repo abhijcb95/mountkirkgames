@@ -1,0 +1,20 @@
+{
+  "BigQuery Schema": [
+    {
+      "name": "location",
+      "type": "STRING"
+    },
+    {
+      "name": "GMT_time",
+      "type": "STRING"
+    },
+    {
+      "name": "ip_address",
+      "type": "STRING"
+    },
+    {
+      "name": "request",
+      "type": "STRING"
+    }
+  ]
+}
