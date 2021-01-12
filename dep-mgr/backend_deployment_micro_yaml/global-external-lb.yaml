@@ -1,0 +1,22 @@
+#change defaultService to backend service link
+#adjust static ip address accordingly
+
+resources:
+  - name: http-url-map
+    type: compute.v1.urlMap
+    properties:
+      defaultService: <CHANGE_ME>
+
+  - name: global-http-proxy
+    type: compute.v1.targetHttpProxy
+    properties:
+      urlMap: $(ref.http-url-map.selfLink)
+
+  - name: global-http-forwarding-rule
+    type: compute.v1.globalForwardingRule
+    properties:
+      IPAddress: <CHANGE_ME>
+      IPProtocol: TCP
+      loadBalancingScheme: EXTERNAL
+      portRange: 80
+      target: $(ref.global-http-proxy.selfLink)

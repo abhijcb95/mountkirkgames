@@ -1,0 +1,34 @@
+# Example of the network template usage.
+#
+# In this example, a network is created. Subnetworks can be created
+# via the `subnetworks` property of the `network.py` template (such as 
+# test-subnetwork-1)
+#
+# Note that the `name` property of the `templates/network.py` resource type is
+# optional. If omitted, the DM resource name is used.
+
+imports:
+  - path: templates/network/network.py
+    name: network.py
+  - path: templates/network/subnetwork.py
+    name: subnetwork.py
+
+
+resources:
+  - name: vpc-global
+    type: network.py
+    properties:
+      autoCreateSubnetworks: false
+      subnetworks:
+        - name: us-subnet-backend-server
+          region: us-central1
+          ipCidrRange: 10.0.1.0/24
+        - name: eu-subnet-backend-server
+          region: europe-west6
+          ipCidrRange: 10.0.2.0/24
+        - name: asia-subnet-backend-server
+          region: asia-east1
+          ipCidrRange: 10.0.3.0/24
+        - name: us-subnet-data-analytics
+          region: us-central1
+          ipCidrRange: 10.0.10.0/24

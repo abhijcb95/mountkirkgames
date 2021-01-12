@@ -1,0 +1,251 @@
+# Entire Backend Server
+# Pre-requirements:
+#   - network.yaml deployed
+#   - static external IP address configured and filled in for global external lb deployment
+#   - firestore created for project, with a 'users' collection
+#   
+#
+# Creates firewall rules, health-check, instance templates, mig, backend service, global lb, pubsub, bq 2 dataset and 2 tables
+#
+# Defaults:
+#   - service account: service-account-backend-server // startup-script - apt update
+#   - e2-medium machine type // shielded vm // default image in instance_template.py // persistent stateless disk
+#   - network: global-vpc // no ext ip // network tags - backend-server // labels - phase: production
+#   - regional MIG
+#
+# Usage: (incomplete)
+#   1) type in name, '-backend-server' will be appended to this name
+#   2) key in region to create MIG (subnet must be available in the region)
+#   3) key in autoscaling and target size figures
+#   4) use 'gcloud compute instance-templates list --uri' to find and select relevant instance template
+#   5) edit static ip address for globalforwardingrule
+#   ** deploy accordingly
+#
+# Dev Notes:
+#   - 
+
+
+imports:
+  - path: templates/backend_server/managed_instance_group.py
+    name: managed_instance_group.py
+  - path: templates/backend_server/autoscaler.py
+    name: autoscaler.py
+  - path: templates/backend_server/instance_template.py
+    name: instance_template.py
+  - path: templates/backend_server/healthcheck.py
+    name: healthcheck.py
+  - path: templates/backend_server/backend_service.py
+    name: backend_service.py
+  - path: templates/data_analytics/pubsub.py
+    name: pubsub.py
+  - path: templates/data_analytics/bigquery_dataset.py
+    name: bigquery_dataset.py
+  - path: templates/data_analytics/bigquery_table.py
+    name: bigquery_table.py
+  - path: templates/network/firewall.py
+    name: firewall.py
+
+resources:
+#------------------------------------------
+#start of backend deployment
+
+#Firewalls and healthchecks
+  - name: test-firewall
+    type: firewall.py
+    properties:
+      network: vpc-global
+      rules:
+        - name: allow-healthcheck
+          allowed:
+            - IPProtocol: tcp
+              ports:
+                - "80"
+          direction: INGRESS
+          priority: 1000
+          sourceRanges:
+            - 130.221.0.0/22
+            - 35.191.0.0/16
+          targetTags: 
+            - backend-server
+        - name: vpc-global-allow-http
+          allowed:
+            - IPProtocol: tcp
+              ports:
+                - "80"
+          direction: INGRESS
+          priority: 1000
+          sourceRanges:
+            - 0.0.0.0/0
+        - name: allow-dataflow
+          allowed:
+            - IPProtocol: tcp
+              ports:
+                - "12345-12346"
+          direction: INGRESS
+          priority: 1000
+          sourceRanges:
+            - 10.0.0.0/8
+          targetTags : 
+            - dataflow
+
+  - name: health-check-backend-server
+    type: healthcheck.py
+    properties:
+      checkIntervalSec: 10
+      timeoutSec: 10
+      unhealthyThreshold: 3
+      healthyThreshold: 3
+      port: 80
+      healthcheckType: TCP
+
+# Instance Template and MIG (backend service)
+
+  - name: us-instance-template
+    type: instance_template.py
+    properties:
+      networks:
+        - subnetwork: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/us-central1/subnetworks/us-subnet-backend-server
+  - name: us-mig
+    type: managed_instance_group.py
+    properties:
+      region: us-central1
+      autoscaler:
+        cpuUtilization:
+          utilizationTarget: 0.7
+        minSize: 1
+        maxSize: 10
+      targetSize: 1
+      instanceTemplate:
+        url: $(ref.us-instance-template.selfLink)
+      healthCheck_url: $(ref.health-check-backend-server.selfLink)
+
+  - name: eu-instance-template
+    type: instance_template.py
+    properties:
+      networks:
+        - subnetwork: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/europe-west6/subnetworks/eu-subnet-backend-server
+  - name: eu-mig
+    type: managed_instance_group.py
+    properties:
+      region: europe-west6
+      autoscaler:
+        cpuUtilization:
+          utilizationTarget: 0.7
+        minSize: 1
+        maxSize: 10
+      targetSize: 1
+      instanceTemplate:
+        url: $(ref.eu-instance-template.selfLink)
+      healthCheck_url: $(ref.health-check-backend-server.selfLink)
+
+  - name: asia-instance-template
+    type: instance_template.py
+    properties:
+      networks:
+        - subnetwork: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/asia-east2/subnetworks/asia-subnet-backend-server  
+  - name: asia-mig
+    type: managed_instance_group.py
+    properties:
+      region: asia-east2
+      autoscaler:
+        cpuUtilization:
+          utilizationTarget: 0.7
+        minSize: 1
+        maxSize: 10
+      targetSize: 1
+      instanceTemplate:
+        url: $(ref.asia-instance-template.selfLink)
+      healthCheck_url: $(ref.health-check-backend-server.selfLink)
+
+  - name: global-http-backend-service
+    type: backend_service.py
+    properties:
+      backends:
+        - name: $(ref.us-mig.name)
+          region: $(ref.us-mig.region)
+          mig: $(ref.us-mig.selfLink)
+          balancingMode: UTILIZATION
+          maxUtilization: 0.8
+        - name: $(ref.eu-mig.name)
+          region: $(ref.eu-mig.region)
+          mig: $(ref.eu-mig.selfLink)
+          balancingMode: UTILIZATION
+          maxUtilization: 0.8
+        - name: $(ref.asia-mig.name)
+          region: $(ref.asia-mig.region)
+          mig: $(ref.asia-mig.selfLink)
+          balancingMode: UTILIZATION
+          maxUtilization: 0.8
+      healthCheck_url: $(ref.health-check-backend-server.selfLink)
+#------------------------------------------
+# start of global external lb deployment
+  - name: global-lb
+    type: compute.v1.urlMap
+    properties:
+      defaultService: $(ref.global-http-backend-service.selfLink)
+
+  - name: global-http-proxy
+    type: compute.v1.targetHttpProxy
+    properties:
+      urlMap: $(ref.global-lb.selfLink)
+
+  - name: global-http-forwarding-rule
+    type: compute.v1.globalForwardingRule
+    properties:
+      IPAddress: 35.244.246.143
+      IPProtocol: TCP
+      loadBalancingScheme: EXTERNAL
+      portRange: 80
+      target: $(ref.global-http-proxy.selfLink)
+#------------------------------------------
+#start of data analytics deployment
+  - name: backend-server-to-bq
+    type: pubsub.py
+    properties:
+      name: backend-server-to-bq
+
+  - name: pubsub_to_bq
+    type: bigquery_dataset.py
+    properties:
+      name: pubsub_to_bq
+      location: US
+
+  - name: server_data
+    type: bigquery_table.py
+    properties:
+      name: server_data
+      dependsOn:
+        - pubsub_to_bq
+      datasetId: $(ref.pubsub_to_bq.datasetId)
+      schema:
+        - name: ip_address
+          type: STRING
+        - name: longitude
+          type: NUMERIC
+        - name: latitude
+          type: NUMERIC
+        - name: GMT_time
+          type: STRING
+
+  - name: gcs_to_bq
+    type: bigquery_dataset.py
+    properties:
+      name: gcs_to_bq
+      location: US
+
+  - name: user_files
+    type: bigquery_table.py
+    properties:
+      name: user_files
+      dependsOn:
+        - gcs_to_bq
+      datasetId: $(ref.gcs_to_bq.datasetId)
+      schema:
+        - name: location
+          type: STRING
+        - name: ip_address
+          type: STRING
+        - name: GMT_time
+          type: STRING
+        - name: request
+          type: STRING

@@ -1,0 +1,66 @@
+# Regional Managed Instance Group.
+# Pre-requirements:
+#   - network.yaml run
+#   - instance_template.yaml run
+#   - health_check.yaml run
+#
+# Creates managed instance groups and respective autoscalers
+#
+# Defaults:
+#   - regional MIG
+#   - health check file
+#
+# Usage:
+#   1) type in name, '-mig-backend-server' will be appended to this name
+#   2) key in region to create MIG (subnet must be available in the region)
+#   3) key in autoscaling and target size figures
+#   4) use 'gcloud compute instance-templates list --uri' to find and select relevant instance template
+#   5) deploy accordingly
+
+imports:
+  - path: templates/backend_server/managed_instance_group.py
+    name: managed_instance_group.py
+  - path: templates/backend_server/autoscaler.py
+    name: autoscaler.py
+
+resources:
+  - name: us
+    type: managed_instance_group.py
+    properties:
+      region: us-central1
+      autoscaler:
+        cpuUtilization:
+          utilizationTarget: 0.7
+        minSize: 1
+        maxSize: 10
+      targetSize: 1
+      instanceTemplate:
+        url: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/global/instanceTemplates/us-instance-template-backend-server
+      healthCheck_url: 
+  - name: eu
+    type: managed_instance_group.py
+    properties:
+      region: europe-west6
+      autoscaler:
+        cpuUtilization:
+          utilizationTarget: 0.7
+        minSize: 1
+        maxSize: 10
+      targetSize: 1
+      instanceTemplate:
+        url: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/global/instanceTemplates/eu-instance-template-backend-server
+      healthCheck_url: 
+
+  - name: asia
+    type: managed_instance_group.py
+    properties:
+      region: asia-east2
+      autoscaler:
+        cpuUtilization:
+          utilizationTarget: 0.7
+        minSize: 1
+        maxSize: 10
+      targetSize: 1
+      instanceTemplate:
+        url: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/global/instanceTemplates/asia-instance-template-backend-server
+      healthCheck_url: 

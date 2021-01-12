@@ -1,0 +1,54 @@
+# Example of the BigQuery (dataset and table) template usage.
+#
+# Replace `<FIXME:my_account@email.com>` with your account email.
+
+imports:
+  - path: templates/data_analytics/bigquery_dataset.py
+    name: bigquery_dataset.py
+  - path: templates/data_analytics/bigquery_table.py
+    name: bigquery_table.py
+
+resources:
+  - name: pubsub_to_bq
+    type: bigquery_dataset.py
+    properties:
+      name: pubsub_to_bq
+      location: US
+
+  - name: server_data
+    type: bigquery_table.py
+    properties:
+      name: server_data
+      dependsOn:
+        - pubsub_to_bq
+      datasetId: $(ref.pubsub_to_bq.datasetId)
+      schema:
+        - name: ip_address
+          type: STRING
+        - name: longitude
+          type: NUMERIC
+        - name: latitude
+          type: NUMERIC
+        - name: GMT_time
+          type: STRING
+
+  - name: gcs_to_bq
+    type: bigquery_dataset.py
+    properties:
+      name: gcs_to_bq
+      location: US
+
+  - name: user_files
+    type: bigquery_table.py
+    properties:
+      name: user_files
+      dependsOn:
+        - gcs_to_bq
+      datasetId: $(ref.gcs_to_bq.datasetId)
+      schema:
+        - name: location
+          type: STRING
+        - name: ip_address
+          type: STRING
+        - name: request
+          type: STRING

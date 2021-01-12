@@ -1,0 +1,32 @@
+# Instance template for backend server. network.yaml must be deployed before use
+#
+# use 'gcloud compute networks subnets list --uri' to choose subnet to create instance template for
+# name the instance template according to the region of the subnet
+# template will append name with '-backend-server' for full name when deployed
+#
+# any changes to the base image should be reflected in the python script
+#
+# defaults include: network, Persistent autodelete boot disk with defined image, e2-medium machine type,
+#   no external ip, labels - phase:production, network tags - backend-server, startup script to run application,
+#   shielded Vtpm & integrity monitoring On
+
+imports:
+  - path: templates/backend_server/instance_template.py
+    name: instance_template.py
+
+resources:
+  - name: us
+    type: instance_template.py
+    properties:
+      networks:
+        - subnetwork: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/us-central1/subnetworks/us-subnet-backend-server
+  - name: eu
+    type: instance_template.py
+    properties:
+      networks:
+        - subnetwork: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/europe-west6/subnetworks/eu-subnet-backend-server
+  - name: asia
+    type: instance_template.py
+    properties:
+      networks:
+        - subnetwork: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/asia-east2/subnetworks/asia-subnet-backend-server

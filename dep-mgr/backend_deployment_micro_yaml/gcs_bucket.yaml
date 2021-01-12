@@ -1,0 +1,23 @@
+# Example usage of the Google Cloud Storage bucket template.
+#
+# In this example, a storage bucket is created in the us-east1 location.
+# Cloud storage bucket names must be globally unique.
+# For bucket and object naming guidelines,
+# refer to https://cloud.google.com/storage/docs/naming.
+#
+# Replace the <FIXME:bucket_name> placeholder with a globally unique storage
+# bucket name. For details, refer to
+# https://cloud.google.com/storage/docs/json_api/v1/buckets.
+
+imports:
+  - path: templates/data_analytics/gcs_bucket.py
+    name: gcs_bucket.py
+
+resources:
+  - name: gcs-to-bq
+    type: gcs_bucket.py
+    properties:
+      name: gcs-to-bq
+      location: us
+      versioning:
+        enabled: False

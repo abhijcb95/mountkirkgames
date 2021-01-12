@@ -1,0 +1,28 @@
+# Example of the backend service template usage.
+#
+# In this example, a global HTTP backend service is created.
+#
+# Replace the following placeholders with valid values:
+#   <FIXME:instanceGroup>: a URL of a zonal instance group
+#   <FIXME:healthcheck>: a URL of the TCP healthcheck
+#
+
+imports:
+  - path: templates/backend_server/backend_service.py
+    name: backend_service.py
+
+resources:
+  - name: global-http-backend-service
+    type: backend_service.py
+    properties:
+      backends:
+        - group: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/us-central1/instanceGroupManagers/us-mig-backend-server
+          balancingMode: UTILIZATION
+          maxUtilization: 0.8
+        - group: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/europe-west6/instanceGroupManagers/eu-mig-backend-server
+          balancingMode: UTILIZATION
+          maxUtilization: 0.8
+        - group: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/asia-east2/instanceGroupManagers/asia-mig-backend-server
+          balancingMode: UTILIZATION
+          maxUtilization: 0.8
+      healthCheck_url: https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/global/healthChecks/health-check-backend-server

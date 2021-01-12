@@ -1,0 +1,9 @@
+imports:
+  - path: templates/data_analytics/pubsub.py
+    name: pubsub.py
+
+resources:
+  - name: backend-server-to-bq
+    type: pubsub.py
+    properties:
+      name: backend-server-to-bq

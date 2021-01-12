@@ -1,0 +1,16 @@
+# Example of the healthcheck template usage.
+
+imports:
+- path: templates/backend_server/healthcheck.py
+  name: healthcheck.py
+
+resources:
+- name: health-check-backend-server
+  type: healthcheck.py
+  properties:
+    checkIntervalSec: 10
+    timeoutSec: 10
+    unhealthyThreshold: 3
+    healthyThreshold: 3
+    port: 80
+    healthcheckType: TCP
