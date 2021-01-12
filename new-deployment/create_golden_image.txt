@@ -1,0 +1,56 @@
+# How to create golden image 'image-backend-server' for Mountkirkgames deployment
+
+1. Create a DEBIAN 10 VM (or other linux VM with shielded option) using the static external ip address created
+2. allow http access, set service account to 'service-account-backend-server'
+3. copy & paste startup script value below
+(CONTINUE AFTER START UP SCRIPT)
+
+---- START UP SCRIPT
+apt update
+apt install -y git
+apt install -y apache2
+
+#setting up flask server
+apt-get install -y libapache2-mod-wsgi python-dev
+a2enmod wsgi 
+cd /var/www/
+git clone https://github.com/abhijcb95/mountkirkgames.git
+cd mountkirkgames/
+apt install -y python-pip 
+
+cd mountkirkgames/
+pip install virtualenv 
+virtualenv venv
+venv/bin/activate
+venv/bin/pip install --upgrade pip
+venv/bin/pip install Flask 
+venv/bin/pip install requests
+venv/bin/pip install --upgrade six
+venv/bin/pip install google-cloud
+venv/bin/pip install google-cloud-pubsub
+venv/bin/pip install firebase_admin
+
+pip install --upgrade pip
+pip install Flask 
+pip install requests
+pip install --upgrade six
+pip install --upgrade google-cloud
+pip install --upgrade google-cloud-storage
+pip install --upgrade google-cloud-pubsub
+pip install firebase_admin
+deactivate
+
+---- END OF START UP SCRIPT
+
+4. SSH into VM (ensure there is a firewall rule allowing this)
+5. run commands below
+
+sudo nano /var/www/mountkirkgames/mounkirkgames/db.py #change project_id variable accordingly
+mv /var/www/mountkirkgames/mountkirkgames.conf /etc/apache2/sites-available/
+nano /etc/apache2/sites-available/mountkirkgames.conf #adjust the server name to the static ext ip address
+sudo a2ensite mountkirkgames
+sudo service apache2 restart 
+
+6. test the ip address
+7. shut down the vm to create image
+8. continue instructions in README.txt
