@@ -45,8 +45,9 @@ while not site_up:
     os.system("export SITE_UP=$(curl {static_ip} | grep Astray)".format(static_ip=static_ip))
     site_up = os.environ.get("SITE_UP")
     print("The site is not ready yet. Hang tight!")
+    now = datetime.datetime.utcnow().strftime('%H:%M:%S')
     time.sleep(20)
-now = datetime.datetime.utcnow().strftime('%H:%M:%S')
+    
 print("The site is up at {static_ip}! Dataflow Batch Job will now start.".format(static_ip=static_ip))
 
 os.system("gcloud dataflow jobs run us-gcs-to-bq --gcs-location gs://dataflow-templates-us-central1/latest/GCS_Text_to_BigQuery --region us-central1 --max-workers 3 --num-workers 1 --worker-machine-type n1-standard-1 --staging-location gs://{gcs_bucket}/temp --subnetwork https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/us-central1/subnetworks/us-subnet-data-analytics --network vpc-global --disable-public-ips --parameters javascriptTextTransformGcsPath=gs://{gcs_bucket}/dataflow_scripts/transform.js,JSONPath=gs://{gcs_bucket}/dataflow_scripts/bq-schema.json,javascriptTextTransformFunctionName=transform,outputTable=g-grp4-implementation:gcs_to_bq.user_files,inputFilePattern=gs://{gcs_bucket}/*.txt,bigQueryLoadingTemporaryDirectory=gs://{gcs_bucket}/temp".format(gcs_bucket=gcs_bucket))
