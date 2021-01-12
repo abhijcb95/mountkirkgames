@@ -16,7 +16,7 @@ static_ip = '35.244.246.143'
 
 #check for GCS_BUCKET value
 if not os.environ.get("GCS_BUCKET"):
-    gcs_bucket = "gcs-to-bqs"
+    gcs_bucket = "gcs-to-bq"
 else:
     gcs_bucket = os.environ.get("GCS_BUCKET")
 
@@ -52,6 +52,7 @@ print("The site is up at {static_ip}! Dataflow Batch Job will now start.".format
 os.system("gcloud dataflow jobs run us-gcs-to-bq --gcs-location gs://dataflow-templates-us-central1/latest/GCS_Text_to_BigQuery --region us-central1 --max-workers 3 --num-workers 1 --worker-machine-type n1-standard-1 --staging-location gs://{gcs_bucket}/temp --subnetwork https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/us-central1/subnetworks/us-subnet-data-analytics --network vpc-global --disable-public-ips --parameters javascriptTextTransformGcsPath=gs://{gcs_bucket}/dataflow_scripts/transform.js,JSONPath=gs://{gcs_bucket}/dataflow_scripts/bq-schema.json,javascriptTextTransformFunctionName=transform,outputTable=g-grp4-implementation:gcs_to_bq.user_files,inputFilePattern=gs://{gcs_bucket}/*.txt,bigQueryLoadingTemporaryDirectory=gs://{gcs_bucket}/temp".format(gcs_bucket=gcs_bucket))
 break_print(2)
 print("All test components have completed.")
+time.sleep(1)
 print("Open README.txt to see EXPECTED RESULTS in various sinks, with GMT_time (approx.): {now}".format(now=now))
 break_print(5)
 print("This demo is completed, run 'python end_deployment.py' to delete all the resources.")
