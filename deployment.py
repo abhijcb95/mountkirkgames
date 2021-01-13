@@ -3,7 +3,7 @@ import time
 import datetime
 
 def check_for_deployment_completion():
-    os.system("export DEPLOYMENT_COMPLETE=$(gcloud deployment-manager deployments list | grep backend-services | grep DONE)")
+    os.system("export DEPLOYMENT_COMPLETE=$(gcloud deployment-manager deployments list | grep backend-services)")
     return os.environ.get("DEPLOYMENT_COMPLETE")
 
 def break_print(i):
@@ -26,6 +26,7 @@ os.system("gcloud deployment-manager deployments create backend-services --confi
 
 break_print(2)
 print("Deployment completed, starting dataflow streaming job...")
+time.sleep(2)
 
 # Start streaming job
 deployment_complete = None
@@ -36,6 +37,7 @@ os.system("gcloud dataflow jobs run us-pubsub-to-bq --gcs-location gs://dataflow
 
 break_print(2)
 print("Backend services deployment is completed, dataflow streaming job has started...")
+
 
 break_print(5)
 print("The server might take some time to be ready")
