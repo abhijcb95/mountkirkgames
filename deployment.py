@@ -3,8 +3,26 @@ import time
 import datetime
 
 def check_for_deployment_completion():
-    os.system("export DEPLOYMENT_COMPLETE=$(gcloud deployment-manager deployments list | grep backend-services)")
-    return os.environ.get("DEPLOYMENT_COMPLETE")
+    check = False
+    while not check:
+        os.system("gcloud deployment-manager deployments list | grep backend-services > checker.txt")
+        if open("checker.txt",'r').read() != "":
+            check = True
+            os.system("rm checker.txt")
+    return True
+
+def check_for_site_up(static_ip):
+    check = False
+    while not check:
+        os.system("curl static_ip | grep Astray > checker.txt")
+        if open("checker.txt",'r').read() != "":
+            check = True
+            now = datetime.datetime.utcnow().strftime('%H:%M:%S')
+            os.system("rm checker.txt")
+        else:
+            print("The site is not ready yet. Hang tight!")
+            time.sleep(20)
+    return True
 
 def break_print(i):
     time.sleep(i)
@@ -29,10 +47,10 @@ print("Deployment completed, starting dataflow streaming job...")
 time.sleep(2)
 
 # Start streaming job
-deployment_complete = None
-os.system("export DEPLOYMENT_COMPLETE=")
-while not deployment_complete:
-    deployment_complete = check_for_deployment_completion()
+deployment_complete = False
+
+deployment_complete = check_for_deployment_completion()
+
 os.system("gcloud dataflow jobs run us-pubsub-to-bq --gcs-location gs://dataflow-templates-us-central1/latest/PubSub_to_BigQuery --region us-central1 --max-workers 3 --num-workers 1 --worker-machine-type n1-standard-1 --staging-location gs://{gcs_bucket}/temp/ --subnetwork https://www.googleapis.com/compute/v1/projects/g-grp4-implementation/regions/us-central1/subnetworks/us-subnet-data-analytics --network vpc-global --disable-public-ips --parameters inputTopic=projects/g-grp4-implementation/topics/backend-server-to-bq,outputTableSpec=g-grp4-implementation:pubsub_to_bq.server_data".format(gcs_bucket=gcs_bucket))
 
 break_print(2)
@@ -43,12 +61,7 @@ break_print(5)
 print("The server might take some time to be ready")
 break_print(5)
 site_up = None
-while not site_up:
-    os.system("export SITE_UP=$(curl {static_ip} | grep Astray)".format(static_ip=static_ip))
-    site_up = os.environ.get("SITE_UP")
-    print("The site is not ready yet. Hang tight!")
-    now = datetime.datetime.utcnow().strftime('%H:%M:%S')
-    time.sleep(20)
+site_up = check_for_site_up(static_ip)
     
 print("The site is up at {static_ip}! Dataflow Batch Job will now start.".format(static_ip=static_ip))
 
