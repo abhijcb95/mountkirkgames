@@ -14,7 +14,7 @@ def check_for_deployment_completion():
 def check_for_site_up(static_ip):
     check = False
     while not check:
-        os.system("curl {static_ip}} | grep Astray > checker.txt".format(static_ip=static_ip))
+        os.system("curl {static_ip} | grep Astray > checker.txt".format(static_ip=static_ip))
         if open("checker.txt",'r').read() != "":
             check = True
             now = datetime.datetime.utcnow().strftime('%H:%M:%S')
