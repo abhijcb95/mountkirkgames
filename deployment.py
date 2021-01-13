@@ -22,7 +22,7 @@ def check_for_site_up(static_ip):
         else:
             print("The site is not ready yet. Hang tight!")
             time.sleep(20)
-    return True
+    return now
 
 def break_print(i):
     time.sleep(i)
@@ -60,8 +60,7 @@ print("Backend services deployment is completed, dataflow streaming job has star
 break_print(5)
 print("The server might take some time to be ready")
 break_print(5)
-site_up = None
-site_up = check_for_site_up(static_ip)
+now = check_for_site_up(static_ip)
     
 print("The site is up at {static_ip}! Dataflow Batch Job will now start.".format(static_ip=static_ip))
 
